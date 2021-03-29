@@ -48,10 +48,12 @@ int main(void){
 	uint8_t string1[] = "Inizialization";
 	uint8_t string2[] = "Transmitting...";
 	uint8_t string3[] = "Transmission done!";
+	uint8_t string4[] = "...";
+	uint8_t string5[] = "DONE";
 	
   SystemInit();  												/* System Initialization (i.e., PLL)  */
 	
-		init_CAN () ; 
+	init_CAN () ; 
 	LCD_Initialization();
 	LCD_Clear(Blue);
 	GUI_Text(10, 10, string1, Black, Blue);
@@ -73,12 +75,12 @@ int main(void){
 		/* Transmit message on CAN 1 */
 		while ( !(LPC_CAN1->GSR & (1 << 3)) )
 			GUI_Text(10, 50, string3, Black, Blue) ;
+		GUI_Text(10, 60, string4, Yellow, Blue);
 		if (CAN1_Tx( &Tx1_Buff ) == NOT_OK){
 			continue;
 		}else{
 			GUI_Text(10, 50, string2, Black, Blue);
 		}
-		delay(100000000);
 		
 		/** 
 				 @note: FULLCAN identifier will NOT be received as it's not set in the acceptance filter, make changes to setup_LUT() function for that
