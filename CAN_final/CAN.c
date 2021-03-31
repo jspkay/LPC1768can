@@ -8,7 +8,7 @@
   ******************************************************************************
  **/
 
-#include "CAN.h"
+#include "CAN.c.h"
 
 // Declared in sample.c (main group)
 extern CAN_MSG_type Tx1_Buff , Rx1_Buff , Tx2_Buff , Rx2_Buff  ;
@@ -70,6 +70,11 @@ uint8_t CAN1_Tx (CAN_MSG_type* tx_data )
 		LPC_CAN1 -> TDA1 = tx_data -> Data_A ; 		// Message DAtA
 		LPC_CAN1 -> TDB1 = tx_data -> Data_B ; 
 		LPC_CAN1 -> CMR  = 0x21 ; 		// Command register (16.7.2) Bit 0 -> Transmission request is present, Bit 5 -> Select Tx Buffer 1
+		
+		while( !(stat & (0x1 << 3)) ){
+		}
+		LPC_CAN1 -> CMR = 0;
+		
 		return OK ; 
 	} // txbuff1 
 	else if (stat & 0x00000400 ) // se Transmit buffer 2 è libero, usa quello
