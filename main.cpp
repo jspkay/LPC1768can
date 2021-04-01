@@ -98,8 +98,8 @@ int main(void){
 			}
 			
 			// Print received
-			*receivedString = Rx2_Buff.Data_A;
-			*(receivedString+4) = Rx2_Buff.Data_B;
+			for(int i=0; i<4; i++) receivedString[i] = Rx2_Buff.Data_A >> (8*i);
+			for(int i=0; i<4; i++) receivedString[i+4] = Rx2_Buff.Data_B >> (8*i);
 			GUI_Text(10, 100, receivedString, White, Blue);
 			
 			Rx2_Buff.FRAME = 0x0;
