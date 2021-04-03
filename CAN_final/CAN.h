@@ -27,43 +27,42 @@
 #define OK 1 
 #define NOT_OK 0 
 
+typedef struct{
+	uint32_t id;
+	union{
+		uint64_t full;
+		uint32_t parts[2];
+	}data;
+} CAN_MSG;
 
 class CAN{
+	static int x;
+
 	LPC_CAN_TypeDef *can;
-	struct {
-		uint32_t fi ;  				// Bits 19-16: DLC - Data Length Count
-										 // Bit 30: Set for a RTR message
-										// Bit 31: Set for a 29-bit, Extended ID message
-		uint32_t id;    		  // CAN Message ID (11-bit or 29-bit)
-	} frame;
-	
-	int transmitFrame(uint32_t dataA, uint32_t dataB);
-	void receiveFrame(uint32_t *id, uint32_t *dataA, uint32_t *dataB);
+	uint32_t Rx_frame, Tx_frame;
 	
 public:
-	CAN(uint8_t x, uint32_t ID);
+	static CAN can1, can2;
+	CAN_MSG rx_msg;
+	bool received;
+
+	CAN();
+	//CAN& operator=(const CAN& src);
 	
-	void send(string message);
+	int transmitFrame(CAN_MSG data);
+	CAN_MSG receiveFrame(void);
 };
 
-typedef struct {
-	uint32_t FRAME ;  				// Bits 19-16: DLC - Data Length Count
-						       // Bit 30: Set for a RTR message
-						      // Bit 31: Set for a 29-bit, Extended ID message
-	uint32_t MSG_ID ;    		  // CAN Message ID (11-bit or 29-bit)
-	uint32_t Data_A ; 		 // CAN Message Data Bytes 0-3
-	uint32_t Data_B ;  	 	// CAN Message Data Bytes 4-7
+void setup_LUT(void);
+void CONFIG_CAN_FILTER_MODE (uint8_t mode);
 
-} CAN_MSG_type;
-
-
-void init_CAN(void)  ;
-uint8_t CAN1_Tx (CAN_MSG_type* tx_data) ;
+//void init_CAN(void)  ;
+//uint8_t CAN1_Tx (CAN_MSG_type* tx_data) ;
 //uint8_t CAN2_Tx (CAN_MSG_type* tx_data) ;
-void do_CAN1_rx(void) ; 
+//void do_CAN1_rx(void) ; 
 //void do_CAN2_rx(void) ;
 //void setup_LUT(void) ; 
-void CONFIG_CAN_FILTER_MODE (uint8_t mode) ; 
+//void CONFIG_CAN_FILTER_MODE (uint8_t mode) ; 
 
 
 #endif

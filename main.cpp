@@ -27,14 +27,16 @@ extern "C"{
 	#include "TouchPanel/TouchPanel.h"
 	#include "timer/timer.h"
 	#include "joystick/joystick.h"
-	#include "CAN_final/can.c.h"
+	//#include "CAN_final/can.c.h"
 }
+
+#include "CAN_final/can.h"
 
 #ifdef SIMULATOR
 extern uint8_t ScaleFlag; // <- ScaleFlag needs to visible in order for the emulator to find the symbol (can be placed also inside system_LPC17xx.h but since it is RO, it needs more work)
 #endif
 
-CAN_MSG_type Tx1_Buff , Rx1_Buff , Tx2_Buff , Rx2_Buff  ;
+CAN_MSG Tx1_Buff , Rx1_Buff , Tx2_Buff , Rx2_Buff  ;
 uint32_t CAN1_Error_Cnt = 0, CAN2_Error_Cnt = 0;
 volatile uint8_t CAN2RxDone = 0 , CAN1RxDone = 0; 
 
@@ -48,81 +50,48 @@ void delay(int c){
 
 int main(void){
 	uint8_t string1[] = "Inizialization";
-	uint8_t string2[] = "Transmitting...";
-	uint8_t string3[] = "Transmission done!";
 	uint8_t string4[] = "...";
-	uint8_t string5[] = "DONE";
 	uint8_t string6[] = "ERROR";
 	uint8_t receivedString[8];
 	
   SystemInit();  												/* System Initialization (i.e., PLL)  */
 	
-	init_CAN () ; 
+//	init_CAN () ; 
 	LCD_Initialization();
 	LCD_Clear(Blue);
 	GUI_Text(10, 10, string1, Black, Blue);
 	
-	Tx1_Buff.FRAME = 0x00080000; 		  /* 11-bit STD, no RTR (data frame) , Data Length = 8 bytes */
-	Tx1_Buff.MSG_ID = EXP_STD_ID; 	 /* Try with MSG_ID = 0x125 and then MSG_ID = 0x123 */
-																		/** @NOTE :CAN2 will not Rx ID 0x123 since it isn't setup in the Acceptance Filter **/  
-	Tx1_Buff.Data_A = 1868654947;
-	Tx1_Buff.Data_B = 3355185 ;
+	CAN can1=CAN::can1, can2=CAN::can2;
 
-	Rx2_Buff.FRAME = 0x00;
-	Rx2_Buff.MSG_ID = 0x00;
-	Rx2_Buff.Data_A = 0x00;
-	Rx2_Buff.Data_B = 0x00;
+	//Tx1_Buff.FRAME = 0x00080000; 		  /* 11-bit STD, no RTR (data frame) , Data Length = 8 bytes */
+	//Tx1_Buff.MSG_ID = EXP_STD_ID; 	 /* Try with MSG_ID = 0x125 and then MSG_ID = 0x123 */
+																		/** @NOTE :CAN2 will not Rx ID 0x123 since it isn't setup in the Acceptance Filter **/  
+	//Tx1_Buff.Data_A = 1868654947;
+	//Tx1_Buff.Data_B = 3355185 ;
+
 	CONFIG_CAN_FILTER_MODE( AF_ON );
 	
-	while (1)
-  {
-		/* Transmit message on CAN 1 */
-		while ( !(LPC_CAN1->GSR & (1 << 3)) )
-			GUI_Text(10, 50, string3, Black, Blue) ;
-		GUI_Text(10, 60, string4, Yellow, Blue);
-		if (CAN1_Tx( &Tx1_Buff ) == NOT_OK){
-			continue;
-		}else{
-			GUI_Text(10, 50, string2, Black, Blue);
-		}
-		
+	CAN_MSG msg;
+	msg.id = 0x100;
+	msg.data.full = 1868654947 + 3355185;
 
-		if ( CAN2RxDone == OK ){
-			CAN2RxDone = NOT_OK;
-			
-			if ( (Tx1_Buff.MSG_ID != Rx2_Buff.MSG_ID ) ||
-				( Tx1_Buff.Data_A != Rx2_Buff.Data_A ) ||
-				( Tx1_Buff.Data_B != Rx2_Buff.Data_B ) )
-			{
-				GUI_Text(10, 80, string6, White, Blue) ; /// Print on LCD 
-			}
-			
-			// Print received
-			for(int i=0; i<4; i++) receivedString[i] = Rx2_Buff.Data_A >> (8*i);
-			for(int i=0; i<4; i++) receivedString[i+4] = Rx2_Buff.Data_B >> (8*i);
-			GUI_Text(10, 100, receivedString, White, Blue);
-			
-			Rx2_Buff.FRAME = 0x0;
-			Rx2_Buff.MSG_ID = 0x0;
-			Rx2_Buff.Data_A = 0x0;
-			Rx2_Buff.Data_B = 0x0;
-		} /* Message on CAN 2 received */
-		break;
-  }	
+	while( can1.transmitFrame(msg) != OK ); // send the message
+
+	while(!can2.received); // wait until can2 receives the message
+	if(can2.received){
+		GUI_Text(10, 80, string6, White, Blue) ; /// Print on LCD 
+		
+		for(int i=0; i<4; i++) receivedString[i] = can2.rx_msg.data.parts[0] >> (8*i);
+		for(int i=0; i<4; i++) receivedString[i+4] = can2.rx_msg.data.parts[1] >> (8*i);
+
+		GUI_Text(10, 100, receivedString, White, Blue);
+		can2.received = false;
+	}
+					
 	
-	/*
-	joystick_init();
-	TP_Init();
-	TouchPanel_Calibrate();
-	
-	LPC_SC->PCON |= 0x1;									/* power-down	mode										
-	LPC_SC->PCON &= ~(0x2);						
-	
-	 */
-  while (1)	
-  {
+	while (true){
 		__ASM("wfi");
-  }
+	}
 }
 
 /*********************************************************************************************************
