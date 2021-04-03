@@ -84,10 +84,43 @@ int main(void){
 		for(int i=0; i<4; i++) receivedString[i] = can2.rx_msg.data.parts[0] >> (8*i);
 		for(int i=0; i<4; i++) receivedString[i+4] = can2.rx_msg.data.parts[1] >> (8*i);
 
+<<<<<<< HEAD
 		GUI_Text(10, 100, receivedString, White, Blue);
 		can2.received = false;
 	}
 					
+=======
+		if ( CAN2RxDone == OK ){
+			CAN2RxDone = NOT_OK;
+			
+			if ( (Tx1_Buff.MSG_ID != Rx2_Buff.MSG_ID ) ||
+				( Tx1_Buff.Data_A != Rx2_Buff.Data_A ) ||
+				( Tx1_Buff.Data_B != Rx2_Buff.Data_B ) )
+			{
+				GUI_Text(10, 80, string6, White, Blue) ; /// Print on LCD 
+			}
+			
+			// Print received
+			*receivedString = Rx2_Buff.Data_A;
+			*(receivedString+4) = Rx2_Buff.Data_B;
+			GUI_Text(10, 100, receivedString, White, Blue);
+			
+			Rx2_Buff.FRAME = 0x0;
+			Rx2_Buff.MSG_ID = 0x0;
+			Rx2_Buff.Data_A = 0x0;
+			Rx2_Buff.Data_B = 0x0;
+		} /* Message on CAN 2 received */
+		break;
+  }	
+	
+	/*
+	joystick_init();
+	TP_Init();
+	TouchPanel_Calibrate();
+	
+	LPC_SC->PCON |= 0x1;									/* power-down	mode										
+	LPC_SC->PCON &= ~(0x2);						
+>>>>>>> parent of a8e4b27 (LCD correctly written)
 	
 	while (true){
 		__ASM("wfi");
