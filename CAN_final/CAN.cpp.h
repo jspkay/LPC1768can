@@ -12,7 +12,8 @@
 #ifndef _CAN_H
 #define _CAN_H
 
-#include "lpc17xx.h"                    // Device header
+#include "LPC17xx.h"                    // Device header
+#include "../utilities/string.h"
 
 #define AF_OFF			0x01
 #define AF_BYPASS		0x02
@@ -25,6 +26,25 @@
 
 #define OK 1 
 #define NOT_OK 0 
+
+
+class CAN{
+	LPC_CAN_TypeDef *can;
+	struct {
+		uint32_t fi ;  				// Bits 19-16: DLC - Data Length Count
+										 // Bit 30: Set for a RTR message
+										// Bit 31: Set for a 29-bit, Extended ID message
+		uint32_t id;    		  // CAN Message ID (11-bit or 29-bit)
+	} frame;
+	
+	int transmitFrame(uint32_t dataA, uint32_t dataB);
+	void receiveFrame(uint32_t *id, uint32_t *dataA, uint32_t *dataB);
+	
+public:
+	CAN(uint8_t x, uint32_t ID);
+	
+	void send(string message);
+};
 
 typedef struct {
 	uint32_t FRAME ;  				// Bits 19-16: DLC - Data Length Count

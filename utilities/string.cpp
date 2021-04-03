@@ -12,3 +12,4 @@ string::string(char* src){
 const char* string::get(){
 	return str;
 }
+

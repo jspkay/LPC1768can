@@ -8,7 +8,7 @@
   ******************************************************************************
  **/
 
-#include "CAN.c.h"
+#include "CAN.h"
 
 // Declared in sample.c (main group)
 extern CAN_MSG_type Tx1_Buff , Rx1_Buff , Tx2_Buff , Rx2_Buff  ;
