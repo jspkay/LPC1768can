@@ -37,13 +37,13 @@ typedef struct {
 } CAN_MSG_type;
 
 
-//void init_CAN(void)  ;
-//uint8_t CAN1_Tx (CAN_MSG_type* tx_data) ;
-//uint8_t CAN2_Tx (CAN_MSG_type* tx_data) ;
-//void do_CAN1_rx(void) ; 
-//void do_CAN2_rx(void) ;
-//void setup_LUT(void) ; 
-//void CONFIG_CAN_FILTER_MODE (uint8_t mode) ; 
+void init_CAN(void)  ;
+uint8_t CAN1_Tx (CAN_MSG_type* tx_data) ;
+uint8_t CAN2_Tx (CAN_MSG_type* tx_data) ;
+void do_CAN1_rx(void) ; 
+void do_CAN2_rx(void) ;
+void setup_LUT(void) ; 
+void CONFIG_CAN_FILTER_MODE (uint8_t mode) ; 
 
 
 #endif
