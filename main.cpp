@@ -54,6 +54,7 @@ int main(void){
 	uint8_t string6[] = "ERROR";
 	uint8_t receivedString[8];
 	
+	
   SystemInit();  												/* System Initialization (i.e., PLL)  */
 	
 //	init_CAN () ; 
@@ -69,11 +70,21 @@ int main(void){
 	//Tx1_Buff.Data_A = 1868654947;
 	//Tx1_Buff.Data_B = 3355185 ;
 
-	CONFIG_CAN_FILTER_MODE( AF_ON );
+	//CONFIG_CAN_FILTER_MODE( AF_ON );
 	
 	CAN_MSG msg;
 	msg.id = 0x100;
 	msg.data.full = 1868654947 + 3355185;
+
+
+	/**
+	 * Per qualche assurdo motivo (sicuramente legato al compilatore c++)
+	 * è necessario configurare la periferica dal main. Se abilitata durante
+	 * l'esecuzione di un metodo, il mcu si "dimentica" di aver accesso qualcosa
+	 * e la spegne di nuovo...
+	 * 
+	 * */
+	LPC_SC->PCONP |= (0x3 << 13);
 
 	while( can1.transmitFrame(msg) != OK ); // send the message
 

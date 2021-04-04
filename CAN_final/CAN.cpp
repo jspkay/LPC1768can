@@ -38,8 +38,11 @@ CAN::CAN(){
 
 
 int CAN::transmitFrame(CAN_MSG msg){
-	while(!(can->GSR & (1<<3))); // wait until at least one buffer is free
+	uint32_t s = can->GSR & (1<<3);
+	if(!s)// wait until at least one buffer is free
+		return NOT_OK;
 
+	
 	uint32_t status = can->SR;
 	uint32_t tfi, tid, tda, tdb, bufferBit;
 	
