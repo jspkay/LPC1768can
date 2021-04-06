@@ -1,0 +1,13 @@
+.\flash\can_self_test.o: ..\can_self_test.c
+.\flash\can_self_test.o: ..\..\..\..\Drivers\include\lpc17xx_can.h
+.\flash\can_self_test.o: ..\..\..\..\Core\CM3\DeviceSupport\NXP\LPC17xx\LPC17xx.h
+.\flash\can_self_test.o: ..\..\..\..\Core\CM3\CoreSupport\core_cm3.h
+.\flash\can_self_test.o: D:\KEIL\ARM\ARMCC\Bin\..\include\stdint.h
+.\flash\can_self_test.o: ..\..\..\..\Core\CM3\CoreSupport\core_cmInstr.h
+.\flash\can_self_test.o: ..\..\..\..\Core\CM3\CoreSupport\core_cmFunc.h
+.\flash\can_self_test.o: ..\..\..\..\Core\CM3\DeviceSupport\NXP\LPC17xx\system_LPC17xx.h
+.\flash\can_self_test.o: ..\..\..\..\Drivers\include\lpc_types.h
+.\flash\can_self_test.o: ..\lpc17xx_libcfg.h
+.\flash\can_self_test.o: ..\..\..\..\Drivers\include\TouchPanel.h
+.\flash\can_self_test.o: ..\..\..\..\Drivers\include\GLCD.h
+.\flash\can_self_test.o: D:\KEIL\ARM\ARMCC\Bin\..\include\stdio.h
