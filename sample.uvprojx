@@ -10,7 +10,7 @@
       <TargetName>Target 1</TargetName>
       <ToolsetNumber>0x4</ToolsetNumber>
       <ToolsetName>ARM-ADS</ToolsetName>
-      <pCCUsed>5060960::V5.06 update 7 (build 960)::.\ARMCC</pCCUsed>
+      <pCCUsed>5060750::V5.06 update 6 (build 750)::.\ARMCC</pCCUsed>
       <uAC6>0</uAC6>
       <TargetOption>
         <TargetCommonOption>
@@ -322,10 +322,10 @@
             <PlainCh>0</PlainCh>
             <Ropi>0</Ropi>
             <Rwpi>0</Rwpi>
-            <wLevel>2</wLevel>
+            <wLevel>1</wLevel>
             <uThumb>0</uThumb>
             <uSurpInc>0</uSurpInc>
-            <uC99>0</uC99>
+            <uC99>1</uC99>
             <uGnu>0</uGnu>
             <useXO>0</useXO>
             <v6Lang>3</v6Lang>
@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>DEBUG</Define>
               <Undefine></Undefine>
-              <IncludePath>C:\Users\Salvo\AppData\Local\Arm\Packs\ARM\CMSIS\5.7.0\CMSIS\Core\Include</IncludePath>
+              <IncludePath>C:\Users\Salvo\AppData\Local\Arm\Packs\ARM\CMSIS\5.7.0\CMSIS\Core\Include;..\CanProva1;.\CAN\Drivers\include;.\CAN\headers</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -394,9 +394,9 @@
           <GroupName>main</GroupName>
           <Files>
             <File>
-              <FileName>main.cpp</FileName>
-              <FileType>8</FileType>
-              <FilePath>.\main.cpp</FilePath>
+              <FileName>main.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\main.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -494,14 +494,34 @@
           <GroupName>Can</GroupName>
           <Files>
             <File>
-              <FileName>CAN.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\CAN_final\CAN.h</FilePath>
+              <FileName>can.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\CAN\can.c</FilePath>
             </File>
             <File>
-              <FileName>CAN.c</FileName>
+              <FileName>highcan.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\CAN_final\CAN.c</FilePath>
+              <FilePath>.\CAN\highcan.c</FilePath>
+            </File>
+            <File>
+              <FileName>IRQ_CAN.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\CAN\IRQ_CAN.c</FilePath>
+            </File>
+            <File>
+              <FileName>lpc17xx_clkpwr.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\CAN\Drivers\source\lpc17xx_clkpwr.c</FilePath>
+            </File>
+            <File>
+              <FileName>lpc17xx_can.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\CAN\Drivers\source\lpc17xx_can.c</FilePath>
+            </File>
+            <File>
+              <FileName>lpc17xx_can.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\CAN\Drivers\include\lpc17xx_can.h</FilePath>
             </File>
           </Files>
         </Group>
@@ -527,13 +547,26 @@
   <RTE>
     <apis/>
     <components/>
-    <files/>
+    <files>
+      <file attr="config" category="header" name="wolfssl\IDE\MDK5-ARM\Conf\user_settings.h" version="4.7.0">
+        <instance index="0" removed="1">RTE\wolfSSL\user_settings.h</instance>
+        <component Cbundle="wolfSSL" Cclass="wolfSSL" Cgroup="wolfCrypt" Csub="CORE" Cvendor="wolfSSL" Cversion="4.7.0" condition="wolfCrypt-Core"/>
+        <package name="wolfSSL" schemaVersion="1.4" url="http://www.wolfSSL.com/files/ide" vendor="wolfSSL" version="4.7.0"/>
+        <targetInfos/>
+      </file>
+    </files>
   </RTE>
 
   <LayerInfo>
     <Layers>
       <Layer>
         <LayName>sample</LayName>
+        <LayDesc></LayDesc>
+        <LayUrl></LayUrl>
+        <LayKeys></LayKeys>
+        <LayCat></LayCat>
+        <LayLic></LayLic>
+        <LayTarg>0</LayTarg>
         <LayPrjMark>1</LayPrjMark>
       </Layer>
     </Layers>

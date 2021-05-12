@@ -1,9 +1,0 @@
-.\flash\touchpanel.o: ..\..\..\..\Drivers\source\TouchPanel.c
-.\flash\touchpanel.o: ..\..\..\..\Drivers\include\GLCD.h
-.\flash\touchpanel.o: ..\..\..\..\Core\CM3\DeviceSupport\NXP\LPC17xx\LPC17xx.h
-.\flash\touchpanel.o: ..\..\..\..\Core\CM3\CoreSupport\core_cm3.h
-.\flash\touchpanel.o: D:\KEIL\ARM\ARMCC\Bin\..\include\stdint.h
-.\flash\touchpanel.o: ..\..\..\..\Core\CM3\CoreSupport\core_cmInstr.h
-.\flash\touchpanel.o: ..\..\..\..\Core\CM3\CoreSupport\core_cmFunc.h
-.\flash\touchpanel.o: ..\..\..\..\Core\CM3\DeviceSupport\NXP\LPC17xx\system_LPC17xx.h
-.\flash\touchpanel.o: ..\..\..\..\Drivers\include\TouchPanel.h

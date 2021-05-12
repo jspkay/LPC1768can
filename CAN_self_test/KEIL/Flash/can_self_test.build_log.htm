@@ -5,11 +5,11 @@
 <h2>Tool Versions:</h2>
 IDE-Version: µVision V5.33.0.0
 Copyright (C) 2020 ARM Ltd and ARM Germany GmbH. All rights reserved.
-License Information: Antonio Vespa, Politecnico di Torino, LIC=----
+License Information: salvatore pappalardo, Politecnico di Torino, LIC=----
  
 Tool Versions:
 Toolchain:       MDK-Lite  Version: 5.33.0.0
-Toolchain Path:  D:\KEIL\ARM\ARMCC\Bin
+Toolchain Path:  C:\Keil_v5\ARM\ARMCC\Bin
 C Compiler:      Armcc.exe V5.06 update 7 (build 960)
 Assembler:       Armasm.exe V5.06 update 7 (build 960)
 Linker/Locator:  ArmLink.exe V5.06 update 7 (build 960)
@@ -21,31 +21,74 @@ Target DLL:      UL2CM3.DLL V1.163.9.0
 Dialog DLL:      TARMP1.DLL V1.26.0.0
  
 <h2>Project:</h2>
-C:\Users\Antonio\Desktop\ASE\lpc17xx.cmsis.driver.library-master\Examples\CAN\CAN_self_test\KEIL\can_self_test.uvproj
-Project File Date:  04/04/2021
+C:\Users\Salvo\OneDrive - Politecnico di Torino\Special project\keilProjects\CanProva1\CAN_self_test\KEIL\can_self_test.uvprojx
+Project File Date:  04/15/2021
 
 <h2>Output:</h2>
-*** Using Compiler 'V5.06 update 7 (build 960)', folder: 'D:\KEIL\ARM\ARMCC\Bin'
+*** Using Compiler 'V5.06 update 7 (build 960)', folder: 'C:\Keil_v5\ARM\ARMCC\Bin'
 Rebuild target 'LPC1700 FLASH'
-compiling core_cm3.c...
 assembling startup_LPC17xx.s...
+compiling lpc17xx_can.c...
+"no source": Error:  #5: cannot open source input file "..\..\..\..\Drivers\source\lpc17xx_can.c": No such file or directory
+..\..\..\..\Drivers\source\lpc17xx_can.c: 0 warnings, 1 error
+compiling core_cm3.c...
 compiling system_LPC17xx.c...
 compiling lpc17xx_clkpwr.c...
-compiling lpc17xx_gpio.c...
-compiling lpc17xx_can.c...
+"no source": Error:  #5: cannot open source input file "..\..\..\..\Drivers\source\lpc17xx_clkpwr.c": No such file or directory
+..\..\..\..\Drivers\source\lpc17xx_clkpwr.c: 0 warnings, 1 error
 compiling lpc17xx_pinsel.c...
-compiling lpc17xx_uart.c...
+"no source": Error:  #5: cannot open source input file "..\..\..\..\Drivers\source\lpc17xx_pinsel.c": No such file or directory
+..\..\..\..\Drivers\source\lpc17xx_pinsel.c: 0 warnings, 1 error
+compiling lpc17xx_gpio.c...
+"no source": Error:  #5: cannot open source input file "..\..\..\..\Drivers\source\lpc17xx_gpio.c": No such file or directory
+..\..\..\..\Drivers\source\lpc17xx_gpio.c: 0 warnings, 1 error
 compiling debug_frmwrk.c...
-compiling AsciiLib.c...
+"no source": Error:  #5: cannot open source input file "..\..\..\..\Drivers\source\debug_frmwrk.c": No such file or directory
+..\..\..\..\Drivers\source\debug_frmwrk.c: 0 warnings, 1 error
+compiling lpc17xx_uart.c...
+"no source": Error:  #5: cannot open source input file "..\..\..\..\Drivers\source\lpc17xx_uart.c": No such file or directory
+..\..\..\..\Drivers\source\lpc17xx_uart.c: 0 warnings, 1 error
 compiling TouchPanel.c...
-compiling can_self_test.c...
-compiling HzLib.c...
+"no source": Error:  #5: cannot open source input file "..\..\..\..\Drivers\source\TouchPanel.c": No such file or directory
+..\..\..\..\Drivers\source\TouchPanel.c: 0 warnings, 1 error
 compiling GLCD.c...
-linking...
-Program Size: Code=27162 RO-data=1774 RW-data=20 ZI-data=544  
-FromELF: creating hex file...
-".\Flash\can_self_test.axf" - 0 Error(s), 0 Warning(s).
-Build Time Elapsed:  00:00:04
+"no source": Error:  #5: cannot open source input file "..\..\..\..\Drivers\source\GLCD.c": No such file or directory
+..\..\..\..\Drivers\source\GLCD.c: 0 warnings, 1 error
+compiling HzLib.c...
+"no source": Error:  #5: cannot open source input file "..\..\..\..\Drivers\source\HzLib.c": No such file or directory
+..\..\..\..\Drivers\source\HzLib.c: 0 warnings, 1 error
+compiling AsciiLib.c...
+"no source": Error:  #5: cannot open source input file "..\..\..\..\Drivers\source\AsciiLib.c": No such file or directory
+..\..\..\..\Drivers\source\AsciiLib.c: 0 warnings, 1 error
+compiling can_self_test.c...
+..\can_self_test.c(25): error:  #5: cannot open source input file "lpc17xx_can.h": No such file or directory
+  #include "lpc17xx_can.h"
+..\can_self_test.c: 0 warnings, 1 error
+".\Flash\can_self_test.axf" - 11 Error(s), 0 Warning(s).
+
+<h2>Software Packages used:</h2>
+
+Package Vendor: ARM
+                http://www.keil.com/pack/ARM.CMSIS.5.7.0.pack
+                ARM.CMSIS.5.7.0
+                CMSIS (Cortex Microcontroller Software Interface Standard)
+   * Component: CORE Version: 5.4.0
+
+Package Vendor: Keil
+                http://www.keil.com/pack/Keil.LPC1700_DFP.2.6.0.pack
+                Keil.LPC1700_DFP.2.6.0
+                NXP LPC1700 Series Device Support, Drivers and Examples for MCB1700 and LPC1788-32
+
+<h2>Collection of Component include folders:</h2>
+  .\RTE\_LPC1700_FLASH
+  C:\Users\Salvo\AppData\Local\Arm\Packs\ARM\CMSIS\5.7.0\CMSIS\Core\Include
+  C:\Users\Salvo\AppData\Local\Arm\Packs\Keil\LPC1700_DFP\2.6.0\Device\Include
+
+<h2>Collection of Component Files used:</h2>
+
+   * Component: ARM::CMSIS:CORE:5.4.0
+Target not created.
+Build Time Elapsed:  00:00:01
 </pre>
 </body>
 </html>
