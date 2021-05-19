@@ -26,21 +26,22 @@ int main(void){
   SystemInit();  												/* System Initialization (i.e., PLL)  */
 	
 	#ifdef ARDUINO_TEST
-	hCAN_init(1, CAN_5Kbps);
+	hCAN_init(1, CAN_1Mbps);
 	#else
 	hCAN_init(1, CAN_1Mbps);
 	#endif
-	NVIC_DisableIRQ(CAN_IRQn);
+	//NVIC_DisableIRQ(CAN_IRQn);
 	
 	LCD_Initialization();
 	LCD_Clear(Blue);
 	GUI_Text(10, 10, string1, Black, Blue);
 	
+	/*
 	char msgBuff[] = "Stringa di lunghezza arbitraria che continua a camminare sui suoi piedi. Q1234";
 	int ret = hCAN_sendMessage(1, msgBuff, strlen(msgBuff) );
 	char bf[20];
 	sprintf(bf, "%d", ret);
-	GUI_Text(0, 0, (uint8_t*) bf, White, Blue);
+	GUI_Text(0, 0, (uint8_t*) bf, White, Blue); */
 	
   while (1)	
   {

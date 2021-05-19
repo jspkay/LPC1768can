@@ -1,4 +1,6 @@
 #include <lpc17xx_can.h>
+#include <stdio.h>
+#include "../GLCD/GLCD.h"
 #include "./highcan.h"
 
 static int busBlocked = 0, ID;
@@ -6,6 +8,19 @@ volatile int busMine;
 
 extern char hCAN_recMessage[];
 extern int hCAN_lenght;
+
+void printTextOnDisplay(int x, int y, CAN_MSG_Type* msg1){
+		unsigned char buff[100];
+		union {
+			uint32_t n[2];
+			char string[9];
+		} m;
+		m.n[0]  = msg1->dataA.number;
+		m.n[1] = msg1->dataB.number;
+		m.string[8] = 0;
+		sprintf((char*) buff, "0x%x - %s", msg1->id, m.string);
+		GUI_Text(x, y, buff, White, Black);
+}
 
 int hCAN_init(int peripheral, int speed){
 	LPC_CAN_TypeDef *can;
@@ -20,10 +35,10 @@ int hCAN_init(int peripheral, int speed){
 	can->MOD &= ~0x1; // normal mode
 	
 	//Enable Interrupt
-	//CAN_IRQCmd(LPC_CAN1, CANINT_RIE, ENABLE);
+	CAN_IRQCmd(LPC_CAN1, CANINT_RIE, ENABLE);
 	//CAN_IRQCmd(LPC_CAN1, CANINT_TIE1, ENABLE);
 
-	//NVIC_EnableIRQ(CAN_IRQn); // enable interrupt
+	NVIC_EnableIRQ(CAN_IRQn); // enable interrupt
 	CAN_SetAFMode(LPC_CANAF,CAN_AccBP); // Acceptance filter
 }
 
@@ -136,8 +151,10 @@ int hCAN_sendMessage(int canBus, char *buf, int lenght){
 char hCAN_recMessage[hCAN_BUF_LENGHT], hCAN_recDone;
 int hCAN_lenght;
 
+int i = 0;
+
 static inline void putMessageInBuffer(CAN_MSG_Type* msg);
-static enum {IDLE, RECEIVING} recStatus = 0;
+static enum {IDLE, RECEIVING} recStatus = IDLE;
 static int recNext, buffIndex;
 int hCAN_receiveMessage(int peripheral){
 	CAN_MSG_Type msg1;
@@ -150,6 +167,7 @@ int hCAN_receiveMessage(int peripheral){
 	else return hCAN_ERR_NO_EXISTING_BUS;
 	
 	CAN_ReceiveMsg(can, &msg1);
+	//printTextOnDisplay(0, i++*17, &msg1);
 	
 	#ifdef hCAN_CONTENT_INTERESTED // The message will be completely read
 	
@@ -158,8 +176,8 @@ int hCAN_receiveMessage(int peripheral){
 		if( (msg1.id & hCAN_SOT) == hCAN_SOT ){
 			busBlocked = 1;
 			hCAN_recDone = 0;
-			hCAN_lenght = msg1.id & hCAN_ENUM;
-			recNext = hCAN_lenght-1;
+			recNext = msg1.id & hCAN_ENUM - 1;
+			hCAN_lenght = msg1.len;
 			
 			buffIndex = 0;
 			putMessageInBuffer(&msg1);
@@ -176,9 +194,9 @@ int hCAN_receiveMessage(int peripheral){
 			res = hCAN_ERR_LOST_FRAME;
 		}
 	}
-	
-	if(recStatus == RECEIVING){
+	else if(recStatus == RECEIVING){
 		if( (msg1.id & hCAN_ENUM) == recNext ){
+			hCAN_lenght += msg1.len;
 			if(recNext == 0){
 				putMessageInBuffer(&msg1);
 				

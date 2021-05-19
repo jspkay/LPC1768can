@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>DEBUG</Define>
               <Undefine></Undefine>
-              <IncludePath>C:\Users\Salvo\AppData\Local\Arm\Packs\ARM\CMSIS\5.7.0\CMSIS\Core\Include;..\CanProva1;.\CAN\Drivers\include;.\CAN\headers</IncludePath>
+              <IncludePath>..\CanProva1;.\CAN\Drivers\include;.\CAN\headers;.\Core\Include</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>

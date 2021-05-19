@@ -1,5 +1,6 @@
 #include "lpc17xx.h"
 #include "./highcan.h"
+#include "../GLCD/GLCD.h"
 
 void IRQ_CAN1(void);
 void IRQ_CAN2(void);
@@ -13,8 +14,10 @@ void CAN_IRQHandler (void)
 }
 
 void IRQ_CAN1(){
+	int32_t icr = LPC_CAN1->ICR; // clear the interrupt
 	if(hCAN_receiveMessage(1) == hCAN_SUCCESS && hCAN_recDone){
-		// processa messagio in hCAN_recMessage
+		hCAN_recMessage[hCAN_lenght] = 0;
+		GUI_Text(0, 0, (uint8_t*) hCAN_recMessage, Black, Yellow);
 	}
 }
 
