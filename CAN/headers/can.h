@@ -15,4 +15,7 @@ void CAN_bufferFrame(LPC_CAN_TypeDef*can, CAN_MSG_Type msg, int buffer);
 void CAN_sendFrames(LPC_CAN_TypeDef*can);
 int CAN_allTXok(LPC_CAN_TypeDef* can);
 
+int CAN_AF_loadSTDRangelEntry(int canBus, int lowerBound, int upperBound);
+void CAN_AF_disableEntry(int pos, int value);
+
 #endif // LOW_CAN_H

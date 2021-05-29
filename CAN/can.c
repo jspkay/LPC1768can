@@ -38,13 +38,11 @@ void CAN_bufferFrame(LPC_CAN_TypeDef *can, CAN_MSG_Type msg, int buffer){
 	if(buffer == 1){
 		while( (can->SR & CAN_SR_TBS1) == 0); // wait until buffer is ready
 		can->TID1 = msg.id;
-		can->TFI1 &= ~(0xFF << 16);
+		can->TFI1 &= ~(0xFF << 16); // no RTR, std format (11bits)
 		can->TFI1 |= msg.len << 16;
 		can->TDA1 = msg.dataA.number;
 		can->TDB1 = msg.dataB.number;
 		CAN_state |= BUFFER1;
-		//data = data = (msg->dataA[0])|(((msg->dataA[1]))<<8)|((CAN_Msg->dataA[2])<<16)|((CAN_Msg->dataA[3])<<24);
-		//can->TDA1 = msg.dataA;
 	}else{
 		while( (can->SR & CAN_SR_TBS2) == 0); // wait until buffer is ready
 		can->TID2 = msg.id;
@@ -57,7 +55,7 @@ void CAN_bufferFrame(LPC_CAN_TypeDef *can, CAN_MSG_Type msg, int buffer){
 }
 
 static unsigned char counter[2] = "1";
-// TODO: check if transmission is possibile (i.e. periphera is ready)
+// TODO: check if transmission is possibile (i.e. peripheral is ready)
 void CAN_sendFrames(LPC_CAN_TypeDef*can){
 	int cmd = 0;
 	
@@ -78,6 +76,29 @@ inline int CAN_allTXok(LPC_CAN_TypeDef* can){
 	return can->GSR | CAN_GSR_TCS;
 }
 
-inline void CAN_receiveFrame(LPC_CAN_TypeDef*can, CAN_MSG_Type*msg){
+static int tableLen = 0;
+int CAN_AF_loadSTDRangelEntry(int canBus, int lowerBound, int upperBound){
 	
+	LPC_CANAF->AFMR = 1; // CAN receive completely disabled
+	LPC_CANAF_RAM->mask[tableLen] = (canBus-1) << 29 | lowerBound << 16
+																 |(canBus-1) << 13 | upperBound;
+	
+	LPC_CANAF->SFF_sa 		= 0;
+	LPC_CANAF->SFF_GRP_sa = 0;
+	
+	int inc = 1 << 2;
+	LPC_CANAF->EFF_sa 		+= inc;
+	LPC_CANAF->EFF_GRP_sa += inc;
+	LPC_CANAF->ENDofTable += inc;
+	
+	LPC_CANAF->AFMR = 0; // operating mode enabled.
+	
+	return tableLen++;
 }
+
+#define CAN_AF_bitsEnable 1 << 28 | 1 << 12
+void CAN_AF_disableEntry(int pos, int value){
+	if(value) LPC_CANAF_RAM->mask[pos] |= CAN_AF_bitsEnable; // entry is disabled
+	else LPC_CANAF_RAM->mask[pos] &= ~(CAN_AF_bitsEnable); // entry works
+}
+

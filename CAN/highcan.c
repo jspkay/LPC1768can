@@ -3,8 +3,8 @@
 #include "../GLCD/GLCD.h"
 #include "./highcan.h"
 
-static int busBlocked = 0, ID;
-volatile int busMine;
+static int ID[2], busBlocked[2] = {0, 0};
+volatile int busMine[2];
 
 extern char hCAN_recMessage[];
 extern int hCAN_lenght;
@@ -22,6 +22,7 @@ void printTextOnDisplay(int x, int y, CAN_MSG_Type* msg1){
 		GUI_Text(x, y, buff, White, Black);
 }
 
+static int hCAN_AfEntry[2];
 int hCAN_init(int peripheral, int speed){
 	LPC_CAN_TypeDef *can;
 	if(peripheral == 1) can = LPC_CAN1;
@@ -35,21 +36,28 @@ int hCAN_init(int peripheral, int speed){
 	can->MOD &= ~0x1; // normal mode
 	
 	//Enable Interrupt
-	CAN_IRQCmd(LPC_CAN1, CANINT_RIE, ENABLE);
-	//CAN_IRQCmd(LPC_CAN1, CANINT_TIE1, ENABLE);
+	CAN_IRQCmd(can, CANINT_RIE, ENABLE); // receive message 
+	//CAN_IRQCmd(can, CANINT_ALIE, ENABLE); // arbitration lost
+	CAN_IRQCmd(can, CANINT_EPIE, ENABLE);
 
 	NVIC_EnableIRQ(CAN_IRQn); // enable interrupt
-	CAN_SetAFMode(LPC_CANAF,CAN_AccBP); // Acceptance filter
+	
+	// Setup AF
+	CAN_SetAFMode(LPC_CANAF, CAN_AccBP);
+	//hCAN_AfEntry[peripheral-1] = CAN_AF_loadSTDRangelEntry(peripheral, 0x0, 0x7FF); // accept everything
+	//CAN_AF_disableEntry(hCAN_AfEntry[peripheral-1], FALSE);
+	//
+	//int l = CAN_AF_loadSTDRangelEntry(peripheral, 0x0, 0x3F); // accept only last frame
+	//CAN_AF_disableEntry(l, FALSE);
 }
 
 void hCAN_setID(int newid){
-		ID = newid << 5;
-	// 10 09 08 07 06 05 04 03 02 01 00
-	// -------ID-------- --Numerazione--
+		ID[0] = newid << hCAN_FIRST_ID_BIT;
+		ID[1] = newid << hCAN_FIRST_ID_BIT;
 }
 
 int hCAN_sendMessage(int canBus, char *buf, int lenght){
-	if(busBlocked) return hCAN_ERR_BUS_BLOCKED;
+	if(busBlocked[canBus-1]) return hCAN_ERR_BUS_BLOCKED;
 	
 	LPC_CAN_TypeDef * can;
 	if(canBus == 1) can = LPC_CAN1;
@@ -68,14 +76,15 @@ int hCAN_sendMessage(int canBus, char *buf, int lenght){
 	if(frames % 2 != 0) packets++;
 	
 	CAN_MSG_Type msg1, msg2;
-	msg1.id = ID | hCAN_SOT | --frames;
-	msg2.id = ID | --frames;
+	
+	msg1.id = ID[canBus-1] | hCAN_SOT | --frames << hCAN_FIRST_ENUM_BIT;
+	msg2.id = ID[canBus-1] | --frames << hCAN_FIRST_ENUM_BIT;
 	msg1.len = 8;
 	msg2.len = 8;
 	
 	int bufIndex = 0;
 	// Send first two frames to get propriety
-	busMine = 1;
+	busMine[canBus-1] = 1;
 	for(int ii=0; ii<4; ii++){
 			msg1.dataA.string[ii] = buf[ii];
 			msg1.dataB.string[ii] = buf[ii+4];
@@ -90,8 +99,8 @@ int hCAN_sendMessage(int canBus, char *buf, int lenght){
 	// processor stays in while until transsion is put in idle
 	while( (can->GSR & CAN_GSR_TS) == CAN_GSR_TS ); // wait until either the messages are sent or interrupt is issued
 		
-	if(!busMine){ // busMine goes to 0 if interrupt handler for transmission problem is called
-		busBlocked = 1;
+	if(!busMine[canBus-1]){ // busMine goes to 0 if interrupt handler for transmission problem is called
+		busBlocked[canBus-1] = 1;
 		return hCAN_ERR_COLLISION;
 	}
 	
@@ -105,8 +114,8 @@ int hCAN_sendMessage(int canBus, char *buf, int lenght){
 			msg2.dataB.string[ii] = buf[bufIndex+ii+12];
 		}
 		bufIndex+=16;
-		msg1.id = ID | --frames;
-		msg2.id = ID | --frames;
+		msg1.id = ID[canBus-1] | --frames << hCAN_FIRST_ENUM_BIT;
+		msg2.id = ID[canBus-1] | --frames << hCAN_FIRST_ENUM_BIT;
 		
 		// prepare buffer
 		CAN_bufferFrame(can, msg1, 1);
@@ -117,9 +126,8 @@ int hCAN_sendMessage(int canBus, char *buf, int lenght){
 	}
 	
 	// send last packet
-	
-	msg1.id = ID | --frames;
-	msg2.id = ID | --frames; // may be negative. In that case it's not sent
+	msg1.id = ID[canBus-1] | --frames << hCAN_FIRST_ENUM_BIT;
+	msg2.id = ID[canBus-1] | --frames << hCAN_FIRST_ENUM_BIT; // may be negative. In that case it's not sent
 	// assert(lenght-bufIndex == lenght%16)
 	int remaining = lenght-bufIndex;
 	char *txBuffers[4] = {msg1.dataA.string, msg1.dataB.string, msg2.dataA.string, msg2.dataB.string};
@@ -140,10 +148,10 @@ int hCAN_sendMessage(int canBus, char *buf, int lenght){
 	
 	CAN_sendFrames(can);
 	
-	while(!CAN_allTXok(can));
+	while(!CAN_allTXok(can)); // wait for all transmission to successfully complete
 	
-	busBlocked = 0;
-	busMine = 0;
+	busBlocked[canBus-1] = 0;
+	busMine[canBus-1] = 0;
 	
 	return hCAN_SUCCESS;
 }
@@ -153,28 +161,35 @@ int hCAN_lenght;
 
 int i = 0;
 
+#ifdef DEBUG
+	int counter = 0;
+#endif
+
 static inline void putMessageInBuffer(CAN_MSG_Type* msg);
 static enum {IDLE, RECEIVING} recStatus = IDLE;
 static int recNext, buffIndex;
-int hCAN_receiveMessage(int peripheral){
+int hCAN_receiveMessage(int canBus){
 	CAN_MSG_Type msg1;
 	
 	int res;
 	
 	LPC_CAN_TypeDef * can;
-	if(peripheral == 1) can = LPC_CAN1;
-	else if (peripheral == 2) can = LPC_CAN2;
+	if(canBus == 1) can = LPC_CAN1;
+	else if (canBus == 2) can = LPC_CAN2;
 	else return hCAN_ERR_NO_EXISTING_BUS;
 	
 	CAN_ReceiveMsg(can, &msg1);
-	//printTextOnDisplay(0, i++*17, &msg1);
+	
+	#ifdef DEBUG
+	printTextOnDisplay(0, 20*counter++, &msg1);
+	#endif
 	
 	#ifdef hCAN_CONTENT_INTERESTED // The message will be completely read
 	
 	// if it first frame
 	if(recStatus == IDLE){
 		if( (msg1.id & hCAN_SOT) == hCAN_SOT ){
-			busBlocked = 1;
+			busBlocked[canBus-1] = 1;
 			hCAN_recDone = 0;
 			recNext = msg1.id & hCAN_ENUM - 1;
 			hCAN_lenght = msg1.len;
@@ -187,10 +202,10 @@ int hCAN_receiveMessage(int peripheral){
 			res = hCAN_ONGOING_RECEVING;
 		}
 		else if( (msg1.id & hCAN_ENUM) == 0){ // last frame
-			busBlocked = 0;
+			busBlocked[canBus-1] = 0;
 			res = hCAN_SUCCESS;
 		} else { // lost connection
-			busBlocked = 1;
+			busBlocked[canBus-1] = 1;
 			res = hCAN_ERR_LOST_FRAME;
 		}
 	}
@@ -200,7 +215,7 @@ int hCAN_receiveMessage(int peripheral){
 			if(recNext == 0){
 				putMessageInBuffer(&msg1);
 				
-				busBlocked = 0;
+				busBlocked[canBus-1] = 0;
 				hCAN_recDone = 1;
 				res = hCAN_SUCCESS;
 				recStatus = IDLE;
@@ -213,7 +228,7 @@ int hCAN_receiveMessage(int peripheral){
 		}
 		else{
 			if((msg1.id & hCAN_ENUM) == 0){
-				busBlocked = 0;
+				busBlocked[canBus-1] = 0;
 				hCAN_recDone = 1;
 				res = hCAN_ERR_LOST_FRAME;
 			}
@@ -224,18 +239,23 @@ int hCAN_receiveMessage(int peripheral){
 	return res;
 	#else // only the first and last frames are read
 	
-	// TODO:
-	// - if enumeration of frame is not 0, then we ignore all the frames in between
-	// - - to do this, we simply put the AF so that it will accept only 00000 termining
-	// - - frames.
-	// - if the received packet has 00000 termining ID, then we remove filter on AF and 
-	// - - set busBlocked to false
+	if( (msg1.id & hCAN_ENUM) != 0 ){ // if it is not the last frame
+		CAN_AF_disableEntry(hCAN_AfEntry[canBus-1], TRUE); // enable rejection
+		#ifdef DEBUG
+		GUI_Text(0, counter++*20, (uint8_t *) "Disabled", White, Blue);
+		#endif
+		return hCAN_REJECTION_ENABLED;
+	}
+	// the next time we'll receive the last one
+	// so we disable the rejection again
+	CAN_AF_disableEntry(hCAN_AfEntry[canBus-1], FALSE);
+	return hCAN_SUCCESS;
 	
 	#endif
 	
 }
 
-static inline void putMessageInBuffer(CAN_MSG_Type* msg){
+inline void putMessageInBuffer(CAN_MSG_Type* msg){
 	int l = msg->len;
 	if(l == 8){
 			for(int i=0; i<4; i++){
@@ -260,4 +280,14 @@ static inline void putMessageInBuffer(CAN_MSG_Type* msg){
 		}
 		buffIndex += l;
 	} // else l < 8
+}
+
+
+inline int hCAN_arbitrationLost(int canBus){
+	LPC_CAN_TypeDef *can;
+	if(canBus == 1) can = LPC_CAN1;
+	else can = LPC_CAN2;
+	
+	if( (can->ICR & CAN_ICR_ALI) != 0)
+		busMine[canBus-1] = 0;
 }
