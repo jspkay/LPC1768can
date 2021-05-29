@@ -39,7 +39,7 @@ int main(void){
 	
 	
 	char msgBuff[] = "Stringa di lunghezza arbitraria che continua a camminare sui suoi piedi. Q1234";
-	int ret = hCAN_sendMessage(1, msgBuff, strlen(msgBuff) );
+	int ret = 0; // hCAN_sendMessage(1, msgBuff, strlen(msgBuff) );
 	char bf[20];
 	sprintf(bf, "%d", ret);
 	GUI_Text(0, 0, (uint8_t*) bf, White, Blue); 
