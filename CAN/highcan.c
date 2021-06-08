@@ -15,11 +15,11 @@ void printTextOnDisplay(int x, int y, CAN_MSG_Type* msg1){
 			uint32_t n[2];
 			char string[9];
 		} m;
-		m.n[0]  = msg1->dataA.number;
+		m.n[0] = msg1->dataA.number;
 		m.n[1] = msg1->dataB.number;
 		m.string[8] = 0;
-		sprintf((char*) buff, "0x%x - %s", msg1->id, m.string);
-		GUI_Text(x, y, buff, White, Black);
+		//sprintf((char*) buff, "0x%x - %s", msg1->id, m.string);
+		GUI_Text(x, y, (uint8_t*) m.string, White, Black);
 }
 
 static int hCAN_AfEntry[2];
@@ -38,17 +38,18 @@ int hCAN_init(int peripheral, int speed){
 	//Enable Interrupt
 	CAN_IRQCmd(can, CANINT_RIE, ENABLE); // receive message 
 	//CAN_IRQCmd(can, CANINT_ALIE, ENABLE); // arbitration lost
-	//CAN_IRQCmd(can, CANINT_EPIE, ENABLE);
+	CAN_IRQCmd(can, CANINT_EPIE, ENABLE);
 
 	NVIC_EnableIRQ(CAN_IRQn); // enable interrupt
 	
 	// Setup AF
+	//CAN_SetAFMode(LPC_CANAF, CAN_AccBP);
+	int l = CAN_AF_loadSTDRangelEntry(peripheral, 0x0, 0x3F); // accept only last frame
+	CAN_AF_disableEntry(l, FALSE);
 	CAN_SetAFMode(LPC_CANAF, CAN_AccBP);
+	
 	//hCAN_AfEntry[peripheral-1] = CAN_AF_loadSTDRangelEntry(peripheral, 0x0, 0x7FF); // accept everything
 	//CAN_AF_disableEntry(hCAN_AfEntry[peripheral-1], FALSE);
-	//
-	//int l = CAN_AF_loadSTDRangelEntry(peripheral, 0x0, 0x3F); // accept only last frame
-	//CAN_AF_disableEntry(l, FALSE);
 }
 
 void hCAN_setID(int newid){
@@ -240,7 +241,8 @@ int hCAN_receiveMessage(int canBus){
 	#else // only the first and last frames are read
 	
 	if( (msg1.id & hCAN_ENUM) != 0 ){ // if it is not the last frame
-		CAN_AF_disableEntry(hCAN_AfEntry[canBus-1], TRUE); // enable rejection
+		//CAN_AF_disableEntry(hCAN_AfEntry[canBus-1], TRUE); // enable rejection
+		LPC_CANAF->AFMR = 0;
 		#ifdef DEBUG
 		GUI_Text(0, counter++*20, (uint8_t *) "Disabled", White, Blue);
 		#endif
@@ -248,7 +250,8 @@ int hCAN_receiveMessage(int canBus){
 	}
 	// the next time we'll receive the last one
 	// so we disable the rejection again
-	CAN_AF_disableEntry(hCAN_AfEntry[canBus-1], FALSE);
+	//CAN_AF_disableEntry(hCAN_AfEntry[canBus-1], FALSE);
+	CAN_SetAFMode(LPC_CANAF, CAN_AFMR_AccBP);
 	return hCAN_SUCCESS;
 	
 	#endif

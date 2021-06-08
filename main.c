@@ -1,8 +1,5 @@
 #include "LPC17xx.h"
 #include "GLCD/GLCD.h" 
-#include "TouchPanel/TouchPanel.h"
-#include "timer/timer.h"
-#include "joystick/joystick.h"
 #include <highcan.h>
 #include <string.h>
 #include <stdio.h>

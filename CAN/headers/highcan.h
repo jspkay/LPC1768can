@@ -32,7 +32,7 @@
 // --Numerazione- --------ID--------
 
 
-#define hCAN_CONTENT_INTERESTED
+//#define hCAN_CONTENT_INTERESTED
 
 // Received message interface
 extern char hCAN_recMessage[hCAN_BUF_LENGHT], hCAN_recDone;
