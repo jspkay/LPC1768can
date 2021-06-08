@@ -1,5 +1,5 @@
 #include "./can.h"
-#include "./GLCD/GLCD.h"
+#include "../GLCD/GLCD.h"
 
 #define BUFFER1 1
 #define BUFFER2 2
