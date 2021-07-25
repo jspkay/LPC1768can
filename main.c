@@ -8,7 +8,8 @@
 extern uint8_t ScaleFlag; // <- ScaleFlag needs to visible in order for the emulator to find the symbol (can be placed also inside system_LPC17xx.h but since it is RO, it needs more work)
 #endif
 
-#define ARDUINO_TEST
+
+unsigned char key[3][8];
 
 int main(void){
 	uint8_t string1[] = "Inizialization";
@@ -19,6 +20,11 @@ int main(void){
 	uint8_t string6[] = "ERROR";
 	uint8_t receivedString[8];
 	int i;
+	
+	unsigned char *p = (unsigned char*) key;
+	for(int i=0; i<24; i++){
+		p[i] = 'A';
+	}
 	
   SystemInit();  												/* System Initialization (i.e., PLL)  */
 	
@@ -33,6 +39,7 @@ int main(void){
 	LCD_Initialization();
 	LCD_Clear(Blue);
 	GUI_Text(10, 10, string1, Black, Blue);
+	
 	
 	
 	char msgBuff[] = "Stringa di lunghezza arbitraria che continua a camminare sui suoi piedi. Q1234";

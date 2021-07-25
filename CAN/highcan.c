@@ -6,10 +6,7 @@
 static int ID[2], busBlocked[2] = {0, 0};
 volatile int busMine[2];
 
-extern char hCAN_recMessage[];
-extern int hCAN_lenght;
-
-void printTextOnDisplay(int x, int y, CAN_MSG_Type* msg1){
+/*void printTextOnDisplay(int x, int y, CAN_MSG_Type* msg1){
 		unsigned char buff[100];
 		union {
 			uint32_t n[2];
@@ -20,7 +17,7 @@ void printTextOnDisplay(int x, int y, CAN_MSG_Type* msg1){
 		m.string[8] = 0;
 		//sprintf((char*) buff, "0x%x - %s", msg1->id, m.string);
 		GUI_Text(x, y, (uint8_t*) m.string, White, Black);
-}
+}*/
 
 static int hCAN_AfEntry[2];
 int hCAN_init(int peripheral, int speed){
@@ -37,7 +34,7 @@ int hCAN_init(int peripheral, int speed){
 	
 	//Enable Interrupt
 	CAN_IRQCmd(can, CANINT_RIE, ENABLE); // receive message 
-	//CAN_IRQCmd(can, CANINT_ALIE, ENABLE); // arbitration lost
+	CAN_IRQCmd(can, CANINT_ALIE, ENABLE); // arbitration lost
 	CAN_IRQCmd(can, CANINT_EPIE, ENABLE);
 
 	NVIC_EnableIRQ(CAN_IRQn); // enable interrupt
@@ -65,11 +62,18 @@ int hCAN_sendMessage(int canBus, char *buf, int lenght){
 	else if(canBus == 2) can = LPC_CAN2;
 	else return hCAN_ERR_NO_EXISTING_BUS;
 	
+	if(lenght <= 8){
+		CAN_MSG_Type msg;
+		msg.id = ID[canBus-1] | hCAN_SOT;
+		msg.len = lenght;
+		
+		CAN_bufferFrame(can, msg, 1);
+		CAN_sendFrames(can);
+		return hCAN_SUCCESS;
+	}
+	
 	int frames = lenght/8;
 	if( frames > hCAN_MAX_LENGHT ) return hCAN_ERR_MSG_TOO_LONG;
-	
-	// TODO: check if the transmission can be completed with a single packet
-	
 	
 	if(lenght % 8 != 0) frames++;
 	// Send in two frames per time
@@ -81,7 +85,7 @@ int hCAN_sendMessage(int canBus, char *buf, int lenght){
 	msg1.id = ID[canBus-1] | hCAN_SOT | --frames << hCAN_FIRST_ENUM_BIT;
 	msg2.id = ID[canBus-1] | --frames << hCAN_FIRST_ENUM_BIT;
 	msg1.len = 8;
-	msg2.len = 8;
+	msg2.len = lenght <= 16 ? lenght-8 : 8;
 	
 	int bufIndex = 0;
 	// Send first two frames to get propriety
@@ -99,11 +103,13 @@ int hCAN_sendMessage(int canBus, char *buf, int lenght){
 		
 	// processor stays in while until transsion is put in idle
 	while( (can->GSR & CAN_GSR_TS) == CAN_GSR_TS ); // wait until either the messages are sent or interrupt is issued
-		
+	
 	if(!busMine[canBus-1]){ // busMine goes to 0 if interrupt handler for transmission problem is called
 		busBlocked[canBus-1] = 1;
 		return hCAN_ERR_COLLISION;
 	}
+	
+	if(lenght <= 16) return hCAN_SUCCESS;
 	
 	packets--; // we already sent the firt packet
 	for(int i=0; i<packets-1; i++){ // send normal packets
@@ -157,7 +163,7 @@ int hCAN_sendMessage(int canBus, char *buf, int lenght){
 	return hCAN_SUCCESS;
 }
 
-char hCAN_recMessage[hCAN_BUF_LENGHT], hCAN_recDone;
+char hCAN_recMessage[hCAN_BUF_LENGHT], hCAN_recID, hCAN_recDone;
 int hCAN_lenght;
 
 int i = 0;
@@ -182,7 +188,7 @@ int hCAN_receiveMessage(int canBus){
 	CAN_ReceiveMsg(can, &msg1);
 	
 	#ifdef DEBUG
-	printTextOnDisplay(0, 20*counter++, &msg1);
+	//printTextOnDisplay(0, 20*counter++, &msg1);
 	#endif
 	
 	#ifdef hCAN_CONTENT_INTERESTED // The message will be completely read
@@ -192,7 +198,7 @@ int hCAN_receiveMessage(int canBus){
 		if( (msg1.id & hCAN_SOT) == hCAN_SOT ){
 			busBlocked[canBus-1] = 1;
 			hCAN_recDone = 0;
-			recNext = msg1.id & hCAN_ENUM - 1;
+			recNext = ((msg1.id & hCAN_ENUM) >> hCAN_FIRST_ENUM_BIT) - 1;
 			hCAN_lenght = msg1.len;
 			
 			buffIndex = 0;
@@ -202,9 +208,11 @@ int hCAN_receiveMessage(int canBus){
 			
 			res = hCAN_ONGOING_RECEVING;
 		}
-		else if( (msg1.id & hCAN_ENUM) == 0){ // last frame
+		if( (msg1.id & hCAN_ENUM) == 0){ // last frame
 			busBlocked[canBus-1] = 0;
 			res = hCAN_SUCCESS;
+			recStatus = IDLE;
+			hCAN_recDone = 1;
 		} else { // lost connection
 			busBlocked[canBus-1] = 1;
 			res = hCAN_ERR_LOST_FRAME;
@@ -237,6 +245,7 @@ int hCAN_receiveMessage(int canBus){
 		}
 	}
 	
+	if(res == hCAN_SUCCESS) hCAN_recID = msg1.id;
 	return res;
 	#else // only the first and last frames are read
 	

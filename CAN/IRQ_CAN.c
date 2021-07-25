@@ -1,17 +1,19 @@
 #include "lpc17xx.h"
 #include "./highcan.h"
 #include "../GLCD/GLCD.h"
+#include <security.h>
 
 void IRQ_CAN(int canBus);
 
-extern int counter;
+extern unsigned char key[3][8];
+
 
 void CAN_IRQHandler (void)
 {
 	int32_t icr = LPC_CAN1->ICR; // clear the interrupt
 	
-	if( (icr & CAN_ICR_EPI) != 0 )
-		GUI_Text(0, 20*counter++, (uint8_t*) "EPI ERROR!", Black, Yellow);
+//	if( (icr & CAN_ICR_EPI) != 0 )
+//		GUI_Text(0, 20*counter++, (uint8_t*) "EPI ERROR!", Black, Yellow);
 	
 	int canBus = 0;
 	if( (LPC_CAN1->GSR & 1) == 1) canBus = 1;
@@ -24,13 +26,39 @@ void CAN_IRQHandler (void)
 
 void IRQ_CAN(int canBus){
 	
+	unsigned char finestrino[8] = {0,0,0,0,0,0,0,0};
+	
 	if(hCAN_receiveMessage(canBus) == hCAN_SUCCESS && hCAN_recDone){
 		hCAN_recMessage[hCAN_lenght] = 0;
-		GUI_Text(0, 0, (uint8_t*) hCAN_recMessage, Black, Yellow);
+		GUI_Text(10, 50, (uint8_t*) "criptato: ", Black, Yellow);
+		GUI_Text(10, 70, (uint8_t*) hCAN_recMessage, Black, Yellow);
+		
+		
+		if( hCAN_recID == 0x1 ){
+			GUI_Text(10, 120, (uint8_t*) "livello finestrino: ", Black, Yellow);
+			
+			for(int i=0;i<8;i++)
+				finestrino[i] = hCAN_recMessage[i];
+			
+			DES3((unsigned char*) finestrino, key, DECRYPT);
+			for(int i=0; i<100; i++);
+			
+			finestrino[0] += '0';
+			GUI_Text(10, 140, (uint8_t*) finestrino, Black, Yellow);
+		}
+		if( hCAN_recID == 0x2 ){
+			GUI_Text(10, 180, (uint8_t*) "luci: ", Black, Yellow);
+			for(int i=0; i<6; i++){
+				hCAN_recMessage[i] += '0';
+			}
+			hCAN_recMessage[6] = 0;
+			GUI_Text(10, 200, (uint8_t*) hCAN_recMessage, Black, Yellow);
+		}
+		
 	}
 	
 	if(hCAN_arbitrationLost(canBus)){
-	
+		GUI_Text(0, 0, (uint8_t*) "ARBITRATION LOST! SOMEONE IS TRASMIITTING", Yellow, Red);
 	};
 	
 }

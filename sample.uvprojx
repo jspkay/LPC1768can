@@ -322,7 +322,7 @@
             <PlainCh>0</PlainCh>
             <Ropi>0</Ropi>
             <Rwpi>0</Rwpi>
-            <wLevel>2</wLevel>
+            <wLevel>1</wLevel>
             <uThumb>0</uThumb>
             <uSurpInc>0</uSurpInc>
             <uC99>1</uC99>
@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>DEBUG</Define>
               <Undefine></Undefine>
-              <IncludePath>..\CanProva1;.\CAN\Drivers\include;.\CAN\headers;.\Core\Include</IncludePath>
+              <IncludePath>..\CanProva1;.\CAN\Drivers\include;.\CAN\headers;.\Core\Include;.\security</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -487,6 +487,31 @@
               <FileName>string.h</FileName>
               <FileType>5</FileType>
               <FilePath>.\utilities\string.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>security</GroupName>
+          <Files>
+            <File>
+              <FileName>security.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\security\security.c</FilePath>
+            </File>
+            <File>
+              <FileName>security.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\security\security.h</FilePath>
+            </File>
+            <File>
+              <FileName>sha256.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\security\sha256.c</FilePath>
+            </File>
+            <File>
+              <FileName>sha256.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\security\sha256.h</FilePath>
             </File>
           </Files>
         </Group>
