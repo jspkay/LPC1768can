@@ -513,6 +513,26 @@
               <FileType>5</FileType>
               <FilePath>.\security\sha256.h</FilePath>
             </File>
+            <File>
+              <FileName>aes.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\security\aes.c</FilePath>
+            </File>
+            <File>
+              <FileName>des.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\security\des.c</FilePath>
+            </File>
+            <File>
+              <FileName>aes.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\security\aes.h</FilePath>
+            </File>
+            <File>
+              <FileName>des.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\security\des.h</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>

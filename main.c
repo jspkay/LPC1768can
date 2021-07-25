@@ -3,6 +3,7 @@
 #include <highcan.h>
 #include <string.h>
 #include <stdio.h>
+#include "security.h"
 
 #ifdef SIMULATOR
 extern uint8_t ScaleFlag; // <- ScaleFlag needs to visible in order for the emulator to find the symbol (can be placed also inside system_LPC17xx.h but since it is RO, it needs more work)
@@ -10,6 +11,10 @@ extern uint8_t ScaleFlag; // <- ScaleFlag needs to visible in order for the emul
 
 
 unsigned char key[3][8];
+
+uint8_t key_aes[16] = {'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A', 'A'};
+uint8_t iv[16] = {'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B'};
+struct AES_ctx ctx_dec[2];
 
 int main(void){
 	uint8_t string1[] = "Inizialization";
@@ -40,7 +45,8 @@ int main(void){
 	LCD_Clear(Blue);
 	GUI_Text(10, 10, string1, Black, Blue);
 	
-	
+	ctx_dec[0] = AES_init(key_aes, iv);
+	ctx_dec[1] = AES_init(key_aes, iv);
 	
 	char msgBuff[] = "Stringa di lunghezza arbitraria che continua a camminare sui suoi piedi. Q1234";
 	int ret = 0; // hCAN_sendMessage(1, msgBuff, strlen(msgBuff) );

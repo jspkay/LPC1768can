@@ -6,7 +6,7 @@
 void IRQ_CAN(int canBus);
 
 extern unsigned char key[3][8];
-
+extern struct AES_ctx ctx_dec[2];
 
 void CAN_IRQHandler (void)
 {
@@ -26,7 +26,7 @@ void CAN_IRQHandler (void)
 
 void IRQ_CAN(int canBus){
 	
-	unsigned char finestrino[8] = {0,0,0,0,0,0,0,0};
+	unsigned char finestrino[16] = {0};
 	
 	if(hCAN_receiveMessage(canBus) == hCAN_SUCCESS && hCAN_recDone){
 		hCAN_recMessage[hCAN_lenght] = 0;
@@ -37,16 +37,27 @@ void IRQ_CAN(int canBus){
 		if( hCAN_recID == 0x1 ){
 			GUI_Text(10, 120, (uint8_t*) "livello finestrino: ", Black, Yellow);
 			
-			for(int i=0;i<8;i++)
+			for(int i=0;i<16;i++)
 				finestrino[i] = hCAN_recMessage[i];
 			
-			DES3((unsigned char*) finestrino, key, DECRYPT);
+			//DES3((unsigned char*) finestrino, key, DECRYPT);
+			AES(&ctx_dec[hCAN_recID-1], (unsigned char*) finestrino);
 			for(int i=0; i<100; i++);
 			
-			finestrino[0] += '0';
+			finestrino[1] = finestrino[0] + '0';
+			finestrino[0] = '0';
+			finestrino[2] = 0;
+			if(finestrino[1] > 9 + '0'){
+				finestrino[1] = finestrino[1] - 10;
+				finestrino[0] = '1';
+			}
+			
 			GUI_Text(10, 140, (uint8_t*) finestrino, Black, Yellow);
 		}
+		
 		if( hCAN_recID == 0x2 ){
+			AES(&ctx_dec[hCAN_recID-1], (unsigned char*) hCAN_recMessage);
+			
 			GUI_Text(10, 180, (uint8_t*) "luci: ", Black, Yellow);
 			for(int i=0; i<6; i++){
 				hCAN_recMessage[i] += '0';

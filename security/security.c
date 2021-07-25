@@ -2,10 +2,10 @@
 #include <stdio.h>
 //#include <stdlib.h>
 #include <string.h>
-
+#include "aes.h"
 #include "des.h"
 
-void DES3(unsigned char *data, unsigned char **key, int mode) {
+void DES3(unsigned char *data, unsigned char key[3][8], int mode) {
     key_set key_sets1[17];
     key_set key_sets2[17];
     key_set key_sets3[17];
@@ -65,8 +65,8 @@ void AES(struct AES_ctx* ctx, uint8_t *data){
     AES_CTR_xcrypt_buffer(ctx, data, 16);
 }
 
-struct AES_ctx* AES_init(const uint8_t *key, const uint8_t iv){
-    struct AES_ctx* aes;
-    AES_init_ctx_iv(aes, key, iv);
-    return struct aes;
+struct AES_ctx AES_init(const uint8_t *key, const uint8_t *iv){
+    struct AES_ctx aes;
+    AES_init_ctx_iv(&aes, key, iv);
+    return aes;
 }
