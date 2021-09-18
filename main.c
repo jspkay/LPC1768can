@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "security.h"
+#include "trng/lib_adc.h"
 
 #ifdef SIMULATOR
 extern uint8_t ScaleFlag; // <- ScaleFlag needs to visible in order for the emulator to find the symbol (can be placed also inside system_LPC17xx.h but since it is RO, it needs more work)
@@ -41,6 +42,7 @@ int main(void){
 	#endif
 	//NVIC_DisableIRQ(CAN_IRQn);
 	
+	ADC_init();
 	LCD_Initialization();
 	LCD_Clear(Blue);
 	GUI_Text(10, 10, string1, Black, Blue);
@@ -53,9 +55,11 @@ int main(void){
 	char bf[20];
 	sprintf(bf, "%d", ret);
 	GUI_Text(0, 0, (uint8_t*) bf, White, Blue); 
+
+	int c = ADC_generate_random();
+
 	
-  while (1)	
-  {
+  while (1){
 		__ASM("wfi");
   }
 }

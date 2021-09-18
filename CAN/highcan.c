@@ -38,6 +38,7 @@ int hCAN_init(int peripheral, int speed){
 	CAN_IRQCmd(can, CANINT_EPIE, ENABLE);
 
 	NVIC_EnableIRQ(CAN_IRQn); // enable interrupt
+	NVIC_SetPriority(CAN_IRQn, 5);
 	
 	// Setup AF
 	//CAN_SetAFMode(LPC_CANAF, CAN_AccBP);

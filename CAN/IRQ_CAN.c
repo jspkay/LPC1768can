@@ -2,6 +2,7 @@
 #include "./highcan.h"
 #include "../GLCD/GLCD.h"
 #include <security.h>
+#include "trng/lib_adc.h"
 
 void IRQ_CAN(int canBus);
 
@@ -21,7 +22,12 @@ void CAN_IRQHandler (void)
 	
 	if(canBus != 0)
 		IRQ_CAN(canBus);
-	// TODO: clear interrupt request
+	
+	
+	uint8_t c[2];
+ 	c[0] = ADC_generate_random();
+	c[1] = 0;
+	GUI_Text(10, 240, c, Black, Yellow);
 }
 
 void IRQ_CAN(int canBus){
@@ -57,7 +63,7 @@ void IRQ_CAN(int canBus){
 		
 		if( hCAN_recID == 0x2 ){
 			AES(&ctx_dec[hCAN_recID-1], (unsigned char*) hCAN_recMessage);
-			
+			for(int i=0; i<100; i++);
 			GUI_Text(10, 180, (uint8_t*) "luci: ", Black, Yellow);
 			for(int i=0; i<6; i++){
 				hCAN_recMessage[i] += '0';

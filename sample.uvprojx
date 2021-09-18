@@ -535,6 +535,26 @@
             </File>
           </Files>
         </Group>
+        <Group>
+          <GroupName>trng</GroupName>
+          <Files>
+            <File>
+              <FileName>IRQ_adc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\trng\IRQ_adc.c</FilePath>
+            </File>
+            <File>
+              <FileName>lib_adc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\trng\lib_adc.c</FilePath>
+            </File>
+            <File>
+              <FileName>lib_adc.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\trng\lib_adc.h</FilePath>
+            </File>
+          </Files>
+        </Group>
       </Groups>
     </Target>
   </Targets>
