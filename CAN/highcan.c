@@ -220,7 +220,7 @@ int hCAN_receiveMessage(int canBus){
 		}
 	}
 	else if(recStatus == RECEIVING){
-		if( (msg1.id & hCAN_ENUM) == recNext ){
+		if( (msg1.id & hCAN_ENUM) == recNext << hCAN_FIRST_ENUM_BIT ){
 			hCAN_lenght += msg1.len;
 			if(recNext == 0){
 				putMessageInBuffer(&msg1);
