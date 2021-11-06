@@ -6,6 +6,8 @@
 static int ID[2], busBlocked[2] = {0, 0};
 volatile int busMine[2];
 
+int hCAN_ActiveError;
+
 /*void printTextOnDisplay(int x, int y, CAN_MSG_Type* msg1){
 		unsigned char buff[100];
 		union {
@@ -32,13 +34,18 @@ int hCAN_init(int peripheral, int speed){
 	CAN_internalPrioMode(can, CAN_PRIO_FST);
 	can->MOD &= ~0x1; // normal mode
 	
-	//Enable Interrupt
+	// Internal varialbes
+	
+	
+	//Enable Interrupt (UM10360 16.7.4)
 	CAN_IRQCmd(can, CANINT_RIE, ENABLE); // receive message 
 	CAN_IRQCmd(can, CANINT_ALIE, ENABLE); // arbitration lost
-	CAN_IRQCmd(can, CANINT_EPIE, ENABLE);
+	//CAN_IRQCmd(can, CANINT_EPIE, ENABLE); // Error passive interrupt
+	CAN_IRQCmd(can, CANINT_BEIE, ENABLE); // Buss Error interrupt
 
 	NVIC_EnableIRQ(CAN_IRQn); // enable interrupt
-	NVIC_SetPriority(CAN_IRQn, 5);
+	
+	NVIC_SetPriority(CAN_IRQn, 0);
 	
 	// Setup AF
 	//CAN_SetAFMode(LPC_CANAF, CAN_AccBP);
@@ -70,6 +77,14 @@ int hCAN_sendMessage(int canBus, char *buf, int lenght){
 		
 		CAN_bufferFrame(can, msg, 1);
 		CAN_sendFrames(can);
+		
+		while( 
+			CAN_isTransmitting(can)	 // wait until either the messages are sent or interrupt is issued
+			&& hCAN_ActiveError == hCAN_ERR_NO_ERR // or an error occours
+		);
+			
+		if( hCAN_ActiveError != hCAN_ERR_NO_ERR)
+			return hCAN_ActiveError;
 		return hCAN_SUCCESS;
 	}
 	
@@ -103,10 +118,14 @@ int hCAN_sendMessage(int canBus, char *buf, int lenght){
 	CAN_sendFrames(can); // send messages
 		
 	// processor stays in while until transsion is put in idle
-	while( (can->GSR & CAN_GSR_TS) == CAN_GSR_TS ); // wait until either the messages are sent or interrupt is issued
+	while( 
+		 hCAN_ActiveError == hCAN_ERR_NO_ERR // or an error occours
+	); 
 	
-	if(!busMine[canBus-1]){ // busMine goes to 0 if interrupt handler for transmission problem is called
+	if(hCAN_ActiveError == hCAN_ERR_BUS_ERROR ) return hCAN_ActiveError;
+	if(hCAN_ActiveError == hCAN_ERR_COLLISION){ // busMine goes to 0 if interrupt handler for transmission problem is called
 		busBlocked[canBus-1] = 1;
+		busMine[canBus-1] = 0;
 		return hCAN_ERR_COLLISION;
 	}
 	
@@ -131,6 +150,11 @@ int hCAN_sendMessage(int canBus, char *buf, int lenght){
 		
 		// send
 		CAN_sendFrames(can);
+		
+		while( 
+			CAN_isTransmitting(can)	 // wait until either the messages are sent or interrupt is issued
+			&& hCAN_ActiveError == hCAN_ERR_NO_ERR // or an error occours
+		); 
 	}
 	
 	// send last packet
@@ -156,7 +180,10 @@ int hCAN_sendMessage(int canBus, char *buf, int lenght){
 	
 	CAN_sendFrames(can);
 	
-	while(!CAN_allTXok(can)); // wait for all transmission to successfully complete
+	while(
+		CAN_isTransmitting(can)	 // wait until either the messages are sent or interrupt is issued
+		&& hCAN_ActiveError == hCAN_ERR_NO_ERR // or an error occours
+	);
 	
 	busBlocked[canBus-1] = 0;
 	busMine[canBus-1] = 0;
@@ -164,8 +191,8 @@ int hCAN_sendMessage(int canBus, char *buf, int lenght){
 	return hCAN_SUCCESS;
 }
 
-char hCAN_recMessage[hCAN_BUF_LENGHT], hCAN_recID, hCAN_recDone;
-int hCAN_lenght;
+char hCAN_recMessage[2][hCAN_BUF_LENGHT], hCAN_recID[2], hCAN_recDone[2];
+int hCAN_lenght[2];
 
 int i = 0;
 
@@ -173,7 +200,7 @@ int i = 0;
 	int counter = 0;
 #endif
 
-static inline void putMessageInBuffer(CAN_MSG_Type* msg);
+static inline void putMessageInBuffer(CAN_MSG_Type* msg, int canBus);
 static enum {IDLE, RECEIVING} recStatus = IDLE;
 static int recNext, buffIndex;
 int hCAN_receiveMessage(int canBus){
@@ -198,12 +225,12 @@ int hCAN_receiveMessage(int canBus){
 	if(recStatus == IDLE){
 		if( (msg1.id & hCAN_SOT) == hCAN_SOT ){
 			busBlocked[canBus-1] = 1;
-			hCAN_recDone = 0;
+			hCAN_recDone[canBus-1] = 0;
 			recNext = ((msg1.id & hCAN_ENUM) >> hCAN_FIRST_ENUM_BIT) - 1;
-			hCAN_lenght = msg1.len;
+			hCAN_lenght[canBus-1] = msg1.len;
 			
 			buffIndex = 0;
-			putMessageInBuffer(&msg1);
+			putMessageInBuffer(&msg1, canBus);
 			
 			recStatus = RECEIVING;
 			
@@ -213,7 +240,7 @@ int hCAN_receiveMessage(int canBus){
 			busBlocked[canBus-1] = 0;
 			res = hCAN_SUCCESS;
 			recStatus = IDLE;
-			hCAN_recDone = 1;
+			hCAN_recDone[canBus-1] = 1;
 		} else { // lost connection
 			busBlocked[canBus-1] = 1;
 			res = hCAN_ERR_LOST_FRAME;
@@ -221,32 +248,32 @@ int hCAN_receiveMessage(int canBus){
 	}
 	else if(recStatus == RECEIVING){
 		if( (msg1.id & hCAN_ENUM) == recNext << hCAN_FIRST_ENUM_BIT ){
-			hCAN_lenght += msg1.len;
+			hCAN_lenght[canBus-1] += msg1.len;
 			if(recNext == 0){
-				putMessageInBuffer(&msg1);
+				putMessageInBuffer(&msg1, canBus-1);
 				
 				busBlocked[canBus-1] = 0;
-				hCAN_recDone = 1;
+				hCAN_recDone[canBus-1] = 1;
 				res = hCAN_SUCCESS;
 				recStatus = IDLE;
 			}
 			else{
 				recNext--;
-				putMessageInBuffer(&msg1);
+				putMessageInBuffer(&msg1, canBus);
 				res = hCAN_ONGOING_RECEVING;
 			}							
 		}
 		else{
 			if((msg1.id & hCAN_ENUM) == 0){
 				busBlocked[canBus-1] = 0;
-				hCAN_recDone = 1;
+				hCAN_recDone[canBus-1] = 1;
 				res = hCAN_ERR_LOST_FRAME;
 			}
 			recStatus = IDLE;
 		}
 	}
 	
-	if(res == hCAN_SUCCESS) hCAN_recID = msg1.id;
+	if(res == hCAN_SUCCESS) hCAN_recID[canBus-1] = msg1.id;
 	return res;
 	#else // only the first and last frames are read
 	
@@ -268,27 +295,27 @@ int hCAN_receiveMessage(int canBus){
 	
 }
 
-inline void putMessageInBuffer(CAN_MSG_Type* msg){
+inline void putMessageInBuffer(CAN_MSG_Type* msg, int canBus){
 	int l = msg->len;
 	if(l == 8){
 			for(int i=0; i<4; i++){
-				hCAN_recMessage[buffIndex+i] = msg->dataA.string[i];
-				hCAN_recMessage[buffIndex+i+4] = msg->dataB.string[i];
+				hCAN_recMessage[canBus-1][buffIndex+i] = msg->dataA.string[i];
+				hCAN_recMessage[canBus-1][buffIndex+i+4] = msg->dataB.string[i];
 			}
 			buffIndex += 8;
 	}
 	else{ // l < 8
 		if(l > 4){
 			for(int i=0; i<4; i++){
-				hCAN_recMessage[buffIndex+i] = msg->dataA.string[i];
+				hCAN_recMessage[canBus-1][buffIndex+i] = msg->dataA.string[i];
 			}
 			for(int i=0; i<l-4; i++){
-				hCAN_recMessage[buffIndex+i] = msg->dataB.string[i];
+				hCAN_recMessage[canBus-1][buffIndex+i] = msg->dataB.string[i];
 			}
 		} // end if l > 4;
 		else{
 			for(int i=0; i<l; i++){
-				hCAN_recMessage[buffIndex+i] = msg->dataA.string[i];
+				hCAN_recMessage[canBus-1][buffIndex+i] = msg->dataA.string[i];
 			}
 		}
 		buffIndex += l;
@@ -301,6 +328,19 @@ inline int hCAN_arbitrationLost(int canBus){
 	if(canBus == 1) can = LPC_CAN1;
 	else can = LPC_CAN2;
 	
-	if( (can->ICR & CAN_ICR_ALI) != 0)
+	if( (can->ICR & CAN_ICR_ALI) != 0){
 		busMine[canBus-1] = 0;
+		return 1;
+	}
+	return 0;
+}
+
+inline int hCAN_busError(int canBus){
+		LPC_CAN_TypeDef *can;
+	if(canBus == 1) can = LPC_CAN1;
+	else can = LPC_CAN2;
+	
+	if( (can->ICR & CAN_ICR_ALI) != 0)
+		return 1;
+	return 0;
 }

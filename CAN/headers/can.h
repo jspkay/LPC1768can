@@ -13,9 +13,16 @@ inline void CAN_internalPrioMode(LPC_CAN_TypeDef*can, int value);
 
 void CAN_bufferFrame(LPC_CAN_TypeDef*can, CAN_MSG_Type msg, int buffer);
 void CAN_sendFrames(LPC_CAN_TypeDef*can);
+void CAN_abortTransmission(LPC_CAN_TypeDef *can);
 int CAN_allTXok(LPC_CAN_TypeDef* can);
 
 int CAN_AF_loadSTDRangelEntry(int canBus, int lowerBound, int upperBound);
 void CAN_AF_disableEntry(int pos, int value);
+
+int CAN_isTransmitting(LPC_CAN_TypeDef *can);
+
+int CAN_resetTXERR(LPC_CAN_TypeDef *can);
+
+
 
 #endif // LOW_CAN_H

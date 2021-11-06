@@ -35,7 +35,7 @@ void ADC_IRQHandler(void) {
 	else
 		cont++; */
 
-	adc_random = ((LPC_ADC->ADGDR>>4) & 0xFFF);/* Read Conversion Result             */  
+ 	adc_random = ((LPC_ADC->ADGDR>>4) & 0xFFF);/* Read Conversion Result             */  
 	adc_done = 1;
   //AD_current = ((LPC_ADC->ADGDR>>4) & 0xFFF);/* Read Conversion Result             */  
 	

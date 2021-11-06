@@ -69,8 +69,9 @@ void CAN_sendFrames(LPC_CAN_TypeDef*can){
 	can->CMR |= cmd;
 	
 	CAN_state = 0;
-	
-	//GUI_Text(0, 20 * (counter[0]++-'0'), counter, White, Blue);
+}
+void CAN_abortTransmission(LPC_CAN_TypeDef *can){
+	can->CMR |= CAN_CMR_AT;
 }
 inline int CAN_allTXok(LPC_CAN_TypeDef* can){
 	return can->GSR | CAN_GSR_TCS;
@@ -102,3 +103,12 @@ void CAN_AF_disableEntry(int pos, int value){
 	else LPC_CANAF_RAM->mask[pos] &= ~(CAN_AF_bitsEnable); // entry works
 }
 
+inline int CAN_isTransmitting(LPC_CAN_TypeDef *can){
+	return (can->GSR & CAN_GSR_TS) == CAN_GSR_TS;
+}
+
+inline int CAN_resetTXERR(LPC_CAN_TypeDef *can){
+	can->MOD = 1; // reset mode to set priority
+	can->GSR &= ~(0xFF << 24);
+	can->MOD &= ~0x1; // normal mode	
+}
